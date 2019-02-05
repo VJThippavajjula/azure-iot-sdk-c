@@ -2321,6 +2321,17 @@ static int InitializeConnection(PMQTTTRANSPORT_HANDLE_DATA transport_data)
                 }
             }
         }
+        else if (transport_data->mqttClientStatus == MQTT_CLIENT_STATUS_NOT_CONNECTED && transport_data->isRecoverableError &&
+				retry_action == RETRY_ACTION_STOP_RETRYING)
+        {
+            // Added by Binal
+            printf("Setting the expiry callback enum\n");
+            /* Codes_SRS_IOTHUB_TRANSPORT_MQTT_COMMON_07_058: [ If the sas token has timed out IoTHubTransport_MQTT_Common_DoWork shall disconnect from the mqtt client and destroy the transport information and wait for reconnect. ] */
+            DisconnectFromClient(transport_data);            
+            transport_data->transport_callbacks.connection_status_cb(IOTHUB_CLIENT_CONNECTION_UNAUTHENTICATED, IOTHUB_CLIENT_CONNECTION_RETRY_EXPIRED, transport_data->transport_ctx);
+			//transport_data->mqttClientStatus = MQTT_CLIENT_STATUS_EXECUTE_DISCONNECT;
+			result = 0;
+        }
         else if (transport_data->mqttClientStatus == MQTT_CLIENT_STATUS_EXECUTE_DISCONNECT)
         {
             // Need to disconnect from client
